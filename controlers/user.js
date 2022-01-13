@@ -16,6 +16,7 @@ const logIn = async (req, res) => {
       msg: 'welcome aboard ',
       username: user.username,
       friends: user.friends,
+      img: user.img,
     })
   }
 
@@ -24,6 +25,7 @@ const logIn = async (req, res) => {
     msg: 'welcome back ',
     username: user.username,
     friends: user.friends,
+    img: user.img,
   })
 }
 
@@ -64,10 +66,30 @@ const getFriend = async (req, res) => {
 
   res.status(200).json(user)
 }
+const getFriends = async (req, res) => {
+  const { requester, usernames } = req.query
+  const user = await User.find({ username: { $in: usernames } })
+  const friends = []
+  for (const friend of user) {
+    const chatname = [friend.username, requester].sort().join('+')
+
+    const chat = mongoose.model(chatname, messageSchema)
+    let messages = await chat.find({})
+    friends.push({ user: friend, messages })
+  }
+  // const friendss = user.map(async (friend) => {
+  //   const chatname = [friend.username, requester].sort().join('+')
+
+  //   const chat = mongoose.model(chatname, messageSchema)
+  //   let messages = chat.find({})
+  //   return { user: friend, messages }
+  // })
+  res.status(200).json({ friends: friends })
+}
 
 router.route('/log-in').post(logIn)
 router.route('/').get(allUsers).patch(addFriend)
+router.route('/friends').get(getFriends)
 router.route('/:user').get(getFriend)
-// router.route('/friends').get(getFriends)
 
 module.exports = router
