@@ -24,7 +24,7 @@ const start = async () => {
   try {
     await db(process.env.MONGO_URI)
     http.listen(port, () => {
-      console.log('server is listening on port 3001')
+      // console.log('server is listening on port 3001')
     })
   } catch (error) {
     console.error(error)
