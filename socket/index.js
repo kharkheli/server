@@ -15,11 +15,6 @@ module.exports = (http) => {
 
   io.on('connection', (socket) => {
     socket.join(socket.user)
-    // const users = []
-    // for (let [id, socket] of io.of('/').sockets) {
-    //   users.push({ userID: id, user: socket.user })
-    // }
-    // // console.log(users)
 
     const notifyFriend = async () => {
       const user = await User.findOne({ username: socket.user }).select(
@@ -49,12 +44,12 @@ module.exports = (http) => {
           return friend
         }
       })
-      // console.log(friends)
+      // // console.log(friends)
       socket.emit('active users', { activeFriends: friends })
     })
 
     socket.on('message sent', async (data) => {
-      // console.log(data.to)
+      // // console.log(data.to)
       const chatName = [data.to, data.from].sort().join('+')
       const chat = mongoose.model(chatName, messageSchema)
       const message = await chat.create({
