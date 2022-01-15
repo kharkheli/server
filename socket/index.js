@@ -54,6 +54,7 @@ module.exports = (http) => {
       const chat = mongoose.model(chatName, messageSchema)
       const message = await chat.create({
         msg: data.content,
+        type: data.type || 'text',
         sender: data.from,
         time: new Date().getTime(),
       })

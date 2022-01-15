@@ -31,12 +31,16 @@ const logIn = async (req, res) => {
 
 const allUsers = async (req, res) => {
   const { starter, username } = req.query
+  const limit = +req.query.limit || 10
+  const skip = +req.query.skip || 0
   const friends = (await User.findOne({ username }).select('friends')).friends
   friends.push(username)
   const re = new RegExp(`^${starter}`)
   const users = await User.find({
     $and: [{ username: { $nin: friends } }, { username: re }],
   })
+    .limit(limit)
+    .skip(skip)
   res.status(200).json([...users])
 }
 
@@ -74,22 +78,34 @@ const getFriends = async (req, res) => {
     const chatname = [friend.username, requester].sort().join('+')
 
     const chat = mongoose.model(chatname, messageSchema)
-    let messages = await chat.find({})
+    let messages = await chat.find({}).sort({ time: -1 }).limit(10)
+    messages.sort((a, b) => {
+      return a.time - b.time
+    })
     friends.push({ user: friend, messages })
   }
-  // const friendss = user.map(async (friend) => {
-  //   const chatname = [friend.username, requester].sort().join('+')
-
-  //   const chat = mongoose.model(chatname, messageSchema)
-  //   let messages = chat.find({})
-  //   return { user: friend, messages }
-  // })
   res.status(200).json({ friends: friends })
+}
+const loadMessages = async (req, res) => {
+  const { limit, skip, user, friend } = req.query
+  const chatname = [friend, user].sort().join('+')
+
+  const chat = mongoose.model(chatname, messageSchema)
+  let messages = await chat
+    .find({})
+    .sort({ time: -1 })
+    .limit(+limit)
+    .skip(+skip)
+  messages.sort((a, b) => {
+    return a.time - b.time
+  })
+  res.status(200).json({ messages: messages })
 }
 
 router.route('/log-in').post(logIn)
 router.route('/').get(allUsers).patch(addFriend)
 router.route('/friends').get(getFriends)
+router.route('/messages').get(loadMessages)
 router.route('/:user').get(getFriend)
 
 module.exports = router
